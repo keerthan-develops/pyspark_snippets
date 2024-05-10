@@ -1,0 +1,237 @@
+
+Write
+Sign up
+Sign in
+
+
+PySpark | How to use Spark API’s to write word count program?
+
+Manojt
+Manojt
+·
+Follow
+4 min read
+·
+Jun 23, 2023
+3
+
+
+
+
+If you have experience with interviews or are preparing for one, you are likely aware that word count is a commonly asked question to assess your understanding of PySpark.
+When it comes to problem-solving, there are often multiple approaches that can be taken. Let’s delve into a PySpark scenario and explore it in detail. Along the way, I’ll also share some additional information that you might not be familiar with regarding PySpark!
+We can choose to solve the problem using any of the API in Spark like RDD, DataFrame, DataSet and SparkSQL. Let’s see how to solve them using each API.
+# Create SparkSession 
+from pyspark.sql import SparkSession
+spark = SparkSession.builder\
+ .master("local")\
+ .appName('word_count')\
+ .getOrCreate()
+The SparkSession is an entry point and central component of Apache Spark that provides a programming interface to interact with Spark functionality. It was introduced in Spark 2.0 as a replacement for the earlier SparkContext.
+The SparkSession object encapsulates the connection to a Spark cluster and enables you to work with various Spark features, including Spark SQL, DataFrame API, Dataset API, and Spark Streaming.
+RDD (Resilient Distributed Dataset)
+RDD is a fundamental data structure in Spark. It represents a distributed collection of objects that can be processed in parallel. RDD is part of the Spark Core API, which provides the foundation for other higher-level APIs and abstractions in Spark.
+sc = spark.SparkContext()
+# Read the input file and Calculating words count
+text_file = sc.textFile("words.txt")
+counts = text_file.flatMap(lambda line: line.split(" ")) \
+                            .map(lambda word: (word, 1)) \
+                           .reduceByKey(lambda x, y: x + y)
+output = counts.collect()
+DataFrame
+DataFrame is an API and abstraction built on top of RDDs. It represents a distributed collection of data organized into named columns, similar to a table in a relational database. DataFrames are part of the Spark SQL API, which provides a programming interface for working with structured and semi-structured data using SQL-like queries.
+#import required pckg
+from pyspark.sql.functions import explode,split,col
+
+df=spark.read.text("words.txt")
+#Apply Split, Explode and groupBy to get count()
+df_count=(
+  df.withColumn('word', explode(split(col('value'), ' ')))
+    .groupBy('word')
+    .count()
+    .sort('count', ascending=False)
+)
+
+#Display Output
+df_count.display()
+Spark SQL
+Spark SQL is a module or component in Spark that provides a programming interface and optimizations for working with structured data using SQL queries. It includes support for DataFrames, Datasets, and executing SQL queries directly on distributed data.
+input_df = spark.read.text("words.txt")
+#Register the DataFrame as a temporary table. so that you can perform SQL queries on tables
+input_df.createOrReplaceTempView("words")
+word_count_df = spark.sql("""
+    SELECT explode(split(value, ' ')) AS word, COUNT(*) AS count
+    FROM words
+    GROUP BY word
+""")
+results = word_count_df.collect()
+This is how you can approach a word count program using different components in PySpark. Wait! I think I missed to explain about DataSet isn’t that? Here is a fact about working with DataSet in PySpark!
+The Dataset API combines the performance optimization of DataFrames and the convenience of RDDs. It provides the benefits of strong typing, compile-time type safety, and object-oriented programming. Additionally, the API fits better with strongly typed languages (Java and Scala). So the fact is “You can’t use DataSet API with Pyspark”
+One of the key benefits of using Datasets in Spark Scala is their ability to provide compile-time type safety and object-oriented programming, which can help catch errors at compile time rather than runtime. This can help improve code quality and reduce the likelihood of errors.
+Okay maybe some of you are still confused on what does strongly typed language means? For example let’s take a scenario where you need to sum two variables in Java and Python to understand their behaviour!
+Java (strongly typed language)
+int num1 = 10;
+String num2 = "20"; // Type mismatch
+
+int sum = num1 + num2; // Compilation error: Type mismatch
+num1 is declared as an int (integer) and assigned a value of 10. However, num2 is declared as a String, which is a different type than int. This would result in a compilation error because of the type mismatch.
+Furthermore, if we try to perform an arithmetic operation between num1 and num2, the compiler would detect the type mismatch and raise a compilation error. This is because the addition operator is not defined between an int and a String.
+Python (dynamically typed language)
+num1 = 10
+num2 = "20"  # No explicit type declaration
+
+sum = num1 + num2
+In Python, variables don’t have an explicit type declaration. We can assign any value to a variable without specifying its type. In the above code, num1 is assigned an integer value of 10, while num2 is assigned a string value of "20".
+When we attempt to add num1 and num2, Python allows the operation to proceed without raising a compilation error. Instead, it performs implicit type coercion and concatenates the string values, resulting in "1020". This behavior is due to Python's dynamic typing, where the type of a variable is determined at runtime.
+The key difference here is that in a strongly typed language, the types of variables are checked and enforced at compile-time, preventing type-related errors. In Python, which is dynamically typed, the type checking is deferred until runtime, allowing more flexibility but potentially introducing errors if incompatible types are used together.
+Hope you found it useful and I’m happy to share my learnings with you. Vote your claps if you liked the content and do follow my blog for more contents on data and data engineering.
+Follow me on Linkedin :- https://www.linkedin.com/in/manoj-t-engineer/
+Pyspark
+Sql
+Python
+Java
+3
+
+
+Manojt
+Written by Manojt
+43 Followers
+Follow
+
+More from Manojt
+A step-by-step approach to convert ER models to effective dimensional models
+Manojt
+Manojt
+A step-by-step approach to convert ER models to effective dimensional models
+In my previous blog, I have discussed in detail about Data Models and how to build a ER(entity-relationship) model from scratch for…
+6 min read
+·
+Apr 8, 2023
+5
+Schema Validation for Streaming data using Kafka + Schema Registry
+Manojt
+Manojt
+Schema Validation for Streaming data using Kafka + Schema Registry
+Before we jump into the topic of Schema Registry let’s understand how data are streamed between producer and consumer.
+5 min read
+·
+Dec 9, 2022
+58
+1
+How to build a Data Model from scratch?
+Manojt
+Manojt
+How to build a Data Model from scratch?
+In this blog, I’ll explain about how to build a Data Model using a business requirement with Retail domain. This blog would be helpful for…
+5 min read
+·
+Mar 26, 2023
+8
+1
+Is that true I can do gold mining with Lakehouse architecture?
+Manojt
+Manojt
+in
+Towards Dev
+Is that true I can do gold mining with Lakehouse architecture?
+Is Lakehouse a Data Warehouse? No….
+4 min read
+·
+Mar 15, 2023
+2
+See all from Manojt
+Recommended from Medium
+Spark Repartition vs Coalesce
+Ashwin
+Ashwin
+Spark Repartition vs Coalesce
+Are you struggling with optimizing the performance of your Spark application? If so, understanding the key differences between the…
+
+·
+6 min read
+·
+Dec 25, 2023
+1
+DropDuplicate, Distinct and GroupBy in Apache Spark | Efficiently Remove Duplicates/Redundant Data
+Hari prasad
+Hari prasad
+DropDuplicate, Distinct and GroupBy in Apache Spark | Efficiently Remove Duplicates/Redundant Data
+How DropDuplicate, Distinct and GoupBy works in Apache Spark and Scenarios to use them to remove duplicates in data efficiently or…
+5 min read
+·
+Jan 21, 2024
+1
+Lists
+
+
+
+Coding & Development
+11 stories
+·
+581 saves
+
+
+
+Predictive Modeling w/ Python
+20 stories
+·
+1134 saves
+Principal Component Analysis for ML
+Time Series Analysis
+deep learning cheatsheet for beginner
+Practical Guides to Machine Learning
+10 stories
+·
+1359 saves
+
+AI-generated image of a cute tiny robot in the backdrop of ChatGPT’s logo
+
+ChatGPT
+21 stories
+·
+597 saves
+Dynamic JSON Parsing in PySpark: A Guide to Flexible Schema Handling
+Halis Manaz
+Halis Manaz
+Dynamic JSON Parsing in PySpark: A Guide to Flexible Schema Handling
+Introduction
+5 min read
+·
+Mar 26, 2024
+5
+PySpark ‘explode’ : Mastering JSON Column Transformation”
+Sahil mahale
+Sahil mahale
+PySpark ‘explode’ : Mastering JSON Column Transformation”
+(DataBricks/Synapse)
+7 min read
+·
+Dec 29, 2023
+1
+Different methods to add column in spark DataFrame…
+R. Ganesh
+R. Ganesh
+Different methods to add column in spark DataFrame…
+In Apache Spark, there are several methods to add a new column to a DataFrame. Here are some common approaches:
+2 min read
+·
+Feb 7, 2024
+PySpark: Transformations v/s Actions
+Roshmita Dey
+Roshmita Dey
+PySpark: Transformations v/s Actions
+In PySpark, transformations and actions are two fundamental types of operations that you can perform on Resilient Distributed Datasets…
+4 min read
+·
+Dec 9, 2023
+16
+See more recommendations
+Help
+Status
+About
+Careers
+Blog
+Privacy
+Terms
+Text to speech
+Teams
